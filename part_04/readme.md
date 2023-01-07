@@ -80,5 +80,4 @@ Your code and technical notebook should be pushed and submitted by the data list
 
 ## Useful Resources
 
-- [How to Report Statistics to Technical Audiences](http://abacus.bates.edu/~ganderso/biology/resources/writing/HTWstats.html)
 - [What is a good way for a data scientist to construct an online portfolio?](https://www.quora.com/What-is-a-good-way-for-a-data-scientist-to-construct-an-online-portfolio)
