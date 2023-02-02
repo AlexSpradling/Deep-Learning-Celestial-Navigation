@@ -1,6 +1,8 @@
 import re
 import datetime as dt
 import numpy as np
+import matplotlib.transforms as transforms
+from matplotlib.patches import Ellipse
 
 
 
@@ -79,4 +81,77 @@ def normalize_y(pos_array, master_pos):
 
     return y_norm
 
+def normalize_times(times_array, master_times):
+    """
+    Times are datetime64 objects and are min max scaled to normalize the time values
+    between 0 and 1
+
+    args
+    ---
+    times(np.array) - A numpy array of datetime64 objects.
+
+    """
+    times = np.array(times_array)
+    times = (times - master_times.min()) / (master_times.max() - master_times.min())
+    return times
+
     
+def un_normalize(pos, lat_range, lat_min, long_range, long_min):
+  pos_norm = pos
+  pos_norm[:,0] = pos_norm[:,0] * lat_range + lat_min
+  pos_norm[:,1] = pos_norm[:,1] * long_range + long_min
+  
+  return pos_norm
+
+def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
+    # taken from https://matplotlib.org/devdocs/gallery/statistics/confidence_ellipse.html
+    """
+    Create a plot of the covariance confidence ellipse of *x* and *y*.
+
+    Parameters
+    ----------
+    x, y : array-like, shape (n, )
+        Input data.
+
+    ax : matplotlib.axes.Axes
+        The axes object to draw the ellipse into.
+
+    n_std : float
+        The number of standard deviations to determine the ellipse's radiuses.
+
+    **kwargs
+        Forwarded to `~matplotlib.patches.Ellipse`
+
+    Returns
+    -------
+    matplotlib.patches.Ellipse
+    """
+    if x.size != y.size:
+        raise ValueError("x and y must be the same size")
+
+    cov = np.cov(x, y)
+    pearson = cov[0, 1]/np.sqrt(cov[0, 0] * cov[1, 1])
+    # Using a special case to obtain the eigenvalues of this
+    # two-dimensional dataset.
+    ell_radius_x = np.sqrt(1 + pearson)
+    ell_radius_y = np.sqrt(1 - pearson)
+    ellipse = Ellipse((0, 0), width=ell_radius_y * 2, height=ell_radius_x * 2,
+                      facecolor=facecolor, **kwargs)
+
+    # Calculating the standard deviation of x from
+    # the squareroot of the variance and multiplying
+    # with the given number of standard deviations.
+    scale_x = np.sqrt(cov[0, 0]) * n_std
+    mean_x = np.mean(x)
+
+    # calculating the standard deviation of y ...
+    scale_y = np.sqrt(cov[1, 1]) * n_std
+    mean_y = np.mean(y)
+
+    transf = transforms.Affine2D() \
+        .rotate_deg(-45) \
+        .scale(scale_y, scale_x) \
+        .translate(mean_y, mean_x)
+
+    ellipse.set_transform(transf + ax.transData)
+    return ax.add_patch(ellipse)
