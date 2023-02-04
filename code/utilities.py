@@ -5,7 +5,6 @@ import matplotlib.transforms as transforms
 from matplotlib.patches import Ellipse
 
 
-
 def extract_position_time(filepath):
     """
     The labels corresponding to the image are encoded in the title. This function
@@ -104,7 +103,7 @@ def un_normalize(pos, lat_range, lat_min, long_range, long_min):
   return pos_norm
 
 def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
-    # taken from https://matplotlib.org/devdocs/gallery/statistics/confidence_ellipse.html
+    # taken directly from https://matplotlib.org/devdocs/gallery/statistics/confidence_ellipse.html
     """
     Create a plot of the covariance confidence ellipse of *x* and *y*.
 
@@ -155,3 +154,31 @@ def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
 
     ellipse.set_transform(transf + ax.transData)
     return ax.add_patch(ellipse)
+
+def mercator_distance(pos1, pos2):
+
+    lat1, long1 = pos1
+    lat2, long2 = pos2
+    # compute meridional parts
+    mpartsinitial = 7915.7045 * np.log10(
+                np.tan(np.pi / 4 + (np.deg2rad(lat1) / 2))) - 23.2689 * np.sin(
+                np.deg2rad(lat1))
+    mpartssecond = 7915.7045 * np.log10(np.tan(np.pi / 4 + (np.deg2rad(lat2) / 2))) - 23.2689 * np.sin(
+                np.deg2rad(lat2))
+                
+    little1 = (mpartssecond - mpartsinitial) 
+    
+    # compute dlat
+    dlat = np.deg2rad(lat2 - lat1)
+
+    # compute dlong
+    dlong = np.deg2rad(long2 - long1)
+
+    # compute course
+    course = np.arctan2(dlong,np.deg2rad(little1/60))
+
+    # compute distance
+    d = np.rad2deg(dlat/np.cos(course)) * 60
+
+    return d
+
