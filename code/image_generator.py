@@ -17,6 +17,9 @@ from skyfield.constants import GM_SUN_Pitjeva_2005_km3_s2 as GM_SUN
 from skyfield.data import hipparcos
 from skyfield.projections import build_stereographic_projection
 
+# custom 
+from utilities import confidence_ellipse
+
 # use dark background
 plt.style.use('dark_background')
 
@@ -25,7 +28,23 @@ eph = load('de421.bsp')
 sun = eph['sun']
 earth = eph['earth']
 
+
 def generate_clouds(ax, cloud_color='grey', cloud_cover = 0/8):
+    """
+    Generates a random number of clouds in a given sky.
+    ---
+    Parameters:
+    ax: matplotlib axis
+        The axis to plot the clouds on.
+    cloud_color: str
+        The color of the clouds.
+    cloud_cover: float
+        The fraction of the sky covered by clouds.
+    ---
+    Returns:
+    ax: matplotlib axis
+    """
+    # generate random number of clouds
     if cloud_cover == 0/8 or cloud_cover == 1/8:
         n_clouds = 0
     elif cloud_cover == 2/8:
@@ -69,28 +88,49 @@ def generate_clouds(ax, cloud_color='grey', cloud_cover = 0/8):
     return ax
 
 def plot_sky(t, observer, field_of_view_degrees=135, limiting_magnitude=3.5, cloud_cover=1/8, 
-              img_directory = '../content/drive/MyDrive/parallel_track_skies/'):
-    # An ephemeris from the JPL provides Sun and Earth positions.
+              img_directory = '../content/drive/MyDrive/parallel_track_skies/', save_images=True):
+    """
+    Plots a sky image at a given time and location.
 
+    Args:
+        t (Skyfield.time.Timescale): List of times to plot.
+        observer (Skyfield observer object): Location of observer.
+        field_of_view_degrees (int, optional): Defaults to 135.  
+        limiting_magnitude (float, optional): _description_. Defaults to 3.5.
+        cloud_cover (int, optional): Random cloud cover. Defaults to 1/8. 8/8 is full cloud cover.
+        img_directory (str, optional): _description_. Defaults to '../content/drive/MyDrive/parallel_track_skies/'.
+        save_images (bool, optional): _description_. Defaults to True.
+
+    Returns:
+        .png image: An image of the sky at the given time and location.
+    """
+
+    # code adapted from https://rhodesmill.org/skyfield/plotting-stars.html
+
+    # An ephemeris from the JPL provides Sun and Earth positions.
     p = observer.at(t)
+
+    # look South (180 degrees) and up (90 degrees)
     q = p.from_altaz(alt_degrees=90, az_degrees=180)
-    # q = p.from_radec(2.52972, 89.2638)
-    
+   
+    # Build a stereographic projection centered on the observer.
     projection = build_stereographic_projection(q)
 
     # The Hipparcos mission provides our star catalog.
     with load.open(hipparcos.URL) as f:
         stars = hipparcos.load_dataframe(f)
 
+    # Compute the star positions in the observer's frame.
     star_positions = (earth+observer).at(t).observe(Star.from_dataframe(stars))
     stars['x'], stars['y'] = projection(star_positions)
 
+    # remove stars below limiting magnitude
     bright_stars = (stars.magnitude <= limiting_magnitude)
     magnitude = stars['magnitude'][bright_stars]
-    marker_size = (0.5 + limiting_magnitude - magnitude) ** 2.0
-    # Time to build the figure!
 
-    # fig, ax = plt.subplots(figsize=[2.24, 2.24])
+    # make size of star proportional to magnitude
+    marker_size = (0.5 + limiting_magnitude - magnitude) ** 2.0
+  
     fig, ax = plt.subplots(figsize=[9,9])
 
     # Draw the stars.
@@ -103,12 +143,11 @@ def plot_sky(t, observer, field_of_view_degrees=135, limiting_magnitude=3.5, clo
     moon_x, moon_y = projection(moon_position)
     ax.scatter(moon_x, moon_y, s=100, color='white')
 
-    comet_color = '#f00'
-    offset = 0.002
-
+    # field of view
     angle = np.pi - field_of_view_degrees / 360.0 * np.pi
     limit = np.sin(angle) / (1.0 - np.cos(angle))
 
+    # set limits
     ax.set_xlim(-limit, limit)
     ax.set_ylim(-limit, limit)
     ax.xaxis.set_visible(False)
@@ -127,20 +166,28 @@ def plot_sky(t, observer, field_of_view_degrees=135, limiting_magnitude=3.5, clo
     #format as string
     title = f'{observer.latitude.degrees} {observer.longitude.degrees} {t.utc_iso()}'
  
-   
-    # save 256 x 256 to images
+    if save_images != False:
+        plt.savefig(img_directory + 'L'+str(round(observer.latitude.degrees, 4)) +'LON'+str(round(observer.longitude.degrees, 4)) + 'T' + t.utc_strftime('%Y-%m-%d-%H-%M-%S') + '.png', pad_inches = None, bbox_inches='tight')
+        plt.close(fig)
 
-    plt.savefig(img_directory + 'L'+str(round(observer.latitude.degrees, 4)) +'LON'+str(round(observer.longitude.degrees, 4)) + 'T' + t.utc_strftime('%Y-%m-%d-%H-%M-%S') + '.png', pad_inches = None, bbox_inches='tight')
-    plt.close(fig)
-
-    del fig
-    del ax
-
-    return 
-
+        del fig
+        del ax
+    else:
+        return fig, ax
 
 
 def great_circle_track(start, end, n):
+    """
+    Calculates the great circle track between two points on a sphere.
+
+    Args:
+        start (tuple): (latitude, longitude) of the starting point in degrees.
+        end (tuple): (latitude, longitude) of the ending point in degrees.
+        n (int): Number of points along the great circle track.
+
+    Returns:
+        list: List of (latitude, longitude) tuples along the great circle track.
+    """
     # Convert latitude and longitude to radians
     lat1, lon1 = math.radians(start[0]), math.radians(start[1])
     lat2, lon2 = math.radians(end[0]), math.radians(end[1])
@@ -176,8 +223,18 @@ def great_circle_track(start, end, n):
     return points
 
 
-
 def parallel_tracks(track, n):
+    """
+    Calculates the parallel tracks displaced by n nautical miles from the original track.
+
+    Args:
+        track (list): List of (latitude, longitude) tuples along the original track.
+        n (int): Number of nautical miles to displace the track.
+
+    Returns:
+        tuple: Tuple of lists of (latitude, longitude) tuples along the north and south tracks.
+    """
+
     # Convert n from nautical miles to radians
     n_radians = n / 3440.069
 
@@ -200,8 +257,20 @@ def parallel_tracks(track, n):
     return north_track, south_track
 
 
-# function to return all waypoints and displaced waypoints for a given track
 def get_waypoints(start, end, n, list_of_mile_displacements):
+    """
+    Uses the great circle track and parallel tracks functions to calculate the waypoints for the training data.
+    
+    Args:
+        start (tuple): (latitude, longitude) of the starting point in degrees.
+        end (tuple): (latitude, longitude) of the ending point in degrees.
+        n (int): Number of points along the great circle track.
+        list_of_mile_displacements (list): List of nautical mile displacements for the parallel tracks.
+
+    Returns:
+        list: List of (latitude, longitude) tuples along the great circle track and parallel tracks.
+    """
+
     # main trackline
     track = great_circle_track(start, end, n)
 
@@ -223,10 +292,17 @@ def get_waypoints(start, end, n, list_of_mile_displacements):
 
 
 def create_times_array(start_time, end_time, n):
-   
-    # datetime object for every minute between start and end
-    # start_time = dt.datetime(2020, 3, 13, 4, 0, 0)
-    # end_time = dt.datetime(2020, 3, 13, 8, 00, 0)
+    """
+    Creates a list of evenly spaced datetime objects between start_time and end_time.
+
+    Args:
+        start_time (datetime): Start time.
+        end_time (datetime): End time.
+        n (int): Number of minutes between each time.
+
+    Returns:
+        tuple: Tuple of lists of datetime objects and datetime objects localized to UTC.
+    """
 
     # create a list of evenly spaced datetime objects
     delta = dt.timedelta(minutes=n)
@@ -245,15 +321,20 @@ def create_times_array(start_time, end_time, n):
 
 
 class DRCalc():
-    """
-    dr_calc() : will calculate a mercator sailing based on a position,
-    C/S and a dt.dimedelta object. It can DR from a position either forwards or backwards
-    using the recriprocal of the DR course. This is useful for the sight analysis functions,
-    since the function starts from the Least Squares fix and then DR's backwards to the time of each sight,
-    this is allows the initial DR position to be extremely inaccurate, yet
-    still provide an effective fit-slope analysis.
-    """
+    """ 
+    ** This is a modified version of a much more robust class that I wrote for my library Capella. **
+    ** Check it out at : https://github.com/AlexSpradling/Capella.git **
+    Class to calculate the coordinates of a point given a starting point, a time, a course, and a speed.
 
+    Args:
+        init_lat (float): Initial latitude in degrees.
+        init_long (float): Initial longitude in degrees.
+        timedelta (float): Time in hours.
+        course (float): Course in degrees.
+        speed (float): Speed in knots.
+    
+    """
+    
     def __init__(self, init_lat, init_long, timedelta, course, speed):
         self.init_lat = float(init_lat)
         self.init_long = float(init_long)
@@ -297,22 +378,17 @@ class DRCalc():
         return
 
 
-def create_voyage(start_lat, start_long, times): 
-    # use drcalc to calculate the position of the ship every 15 minutes for 4 hours
-    positions = []
-    lat = 39
-    long = -140
-    positions.append(np.array([lat, long]))
-    for i in range(len(times)-1):
-        ship = drcalc(lat, long, dt.timedelta(minutes=18).total_seconds(), 142, 20)
-        lat = ship.drlatfwds
-        long = ship.drlongfwds
-        positions.append(np.array([lat, long]))
-
-    return positions
-
-
 def show_training_grid(start, end, points_along_track=100, displacements=10, displacement_interval=1):
+    """
+    Plots a grid of points along a great circle track and parallel tracks. This is just a convenience function for visualizing the training data.
+
+    Args:
+        start (tuple): Starting coordinates (latitude, longitude).
+        end (tuple): Ending coordinates (latitude, longitude).
+        points_along_track (int, optional): Number of points along the great circle track. Defaults to 100.
+        displacements (int, optional): Number of parallel tracks. Defaults to 10.
+        displacement_interval (int, optional): Interval between parallel tracks. Defaults to 1.
+    """
 
     flat_track = get_waypoints(start, end, points_along_track, [x for x in range(0,displacements,displacement_interval)])
      
@@ -329,4 +405,59 @@ def show_training_grid(start, end, points_along_track=100, displacements=10, dis
     # show plot
     plt.show()
 
+    return 
+
+def plot_lat_long(y_pred, y_true, df, show_track = False):
+    """
+    Plots the predicted and actual positions.
+
+    Args:
+        y_pred (numpy.ndarray): Predicted positions.
+        y_true (numpy.ndarray): Actual positions.
+        df (pandas.DataFrame): DataFrame containing the training data.
+        show_track (bool, optional): Whether or not to show the track. Defaults to False.
+    """
+
+    # use seaborn darkgrid
+    sns.set_style("darkgrid")
+
+    # create figure and axes
+    fig, ax = plt.subplots(figsize=(10,10))
+
+    if show_track !=False:
+        # get start and end coordinates
+        start = (39, -140)
+        end = (37, -138)
+
+        # get waypoints
+        waypoints = get_waypoints(start, end, 100, list_of_mile_displacements=[x for x in range(0, 10, 1)])
+
+        # use '+' symbol for waypoints
+        ax.plot(waypoints[:,1], waypoints[:,0], markersize=1, label='Waypoints', alpha = 0.2)
+
+    # plot actual position
+    ax.scatter(y_true[:, 1],y_true[:, 0], label='actual', color = 'red', marker='x')
+ 
+    # plot predicted positions
+    for i in range(len(y_pred)):
+
+        # plot individual predictions
+        ax.scatter(y_pred[i][:,0][:,1], y_pred[i][:,0][:,0], color='blue', alpha=0.05, s = 10)
+
+        # plot mean
+        ax.scatter(y_pred[i][:,0][:,1].mean(), y_pred[i][:,0][:,0].mean(), color='blue', alpha=1.0, marker='o', s=10)
+
+        # plot confidence ellipse
+        confidence_ellipse(y_pred[i][:,0][:,0], y_pred[i][:,0][:,1], ax, n_std=2.0, edgecolor='green', linestyle=':')
+
+        # add time label
+        ax.text(y_pred[i][:,0][:,1].mean() + .005, y_pred[i][:,0][:,0].mean(), df['time'][i], fontsize=8)
+        
+    # labels
+    ax.legend(['Actual', 'Monte Carlo Positions','Predicted', 'Two Sigma Ellipse'])
+    ax.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
+    ax.set_title('Predicted vs. Actual Position Prediction use Monte Carlo Dropout')
+
+    return 
 
