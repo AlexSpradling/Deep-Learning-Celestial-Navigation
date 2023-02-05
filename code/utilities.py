@@ -156,6 +156,16 @@ def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
     return ax.add_patch(ellipse)
 
 def mercator_distance(pos1, pos2):
+    """
+    Compute the distance in nm between two positions on the earth's surface using mercator sailing.
+
+    Args:
+        pos1 (tuple): latitude and longitude of first position
+        pos2 (tuple): latitude and longitude of second position
+
+    Returns:
+        float: distance in nm
+    """
 
     lat1, long1 = pos1
     lat2, long2 = pos2
