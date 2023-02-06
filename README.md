@@ -45,7 +45,7 @@ To create the spatio-temporal training grid, we plotted a toy voyage off the coa
 For each of the 1919 positions in the training grid, a synthetic image of the stars was generated using the Skyfield Python library. This library uses the DE421 Ephemeris from the Jet Propulsion Laboratory for celestial coordinates and can project these coordinates into a stereographic image. A synthetic image was created for each position every 6 minutes over a 4-hour period, as times that are stepped in 6-minute intervals are commonly used in traditional position fixing at sea. The final spatio-temporal grid has an image every 6 minutes for a 4 hour period, for each of the 1919 unique positions, a total of 78,679 images. 
 
 
-![](../capstone/md_images/sky_change.gif)
+![](md_images/sky_change.gif)
 
 *Our images of the sky created in Skyfield presented as a sequence along the toy voyage. The night sky rotates around the north star but also shifts as the vessel transits along the trackline*
 
@@ -59,7 +59,7 @@ The input time tensor is first flattened by a Flatten layer and then passed thro
 
 The output from the CNN and Dense layers are concatenated and passed through two Dense layers with 256 neurons each, with ReLU activation. Both Dense layers are followed by Monte Carlo Dropout layers with a dropout rate of 0.2. The final output is produced by a Dense layer with 2 neurons and sigmoid activation, which outputs a vector of two values between 0 and 1 representing the predicted latitude and longitude, which are unnormalized to recover the predicted latitude and longitude.
 
-![](../capstone/md_images/topology.png)
+![](md_images/topology.png)
 
 **MC Dropout**
 
@@ -114,7 +114,7 @@ We then simulated various voyages through the training grid at different time in
 
 Our model was trained on images that were stepped in 6 minute intervals of time for a four hour period. However, when presented with an image that deviates from this base 6 system, the model breaks down and returns erroneous information. The plot below shows the results of validation images stepped in 20 minute increments.
 
-![](../capstone/md_images/20_min_fixes.png)
+![](md_images/20_min_fixes.png)
 
 **Clouds**
 
@@ -123,10 +123,10 @@ Our synthetic star image plotting functionality includes the capability to creat
 We evaluated the model's accuracy under 4/8 (partly cloudy) conditions and found that at the 30 minute fix frequency, 5 of the 9 images had haversine loss values less than 3 nautical miles, which was encouraging. However, the largest loss was 26 nautical miles. Upon examining the images of the clouds it was not abundantly clear what celestial patterns the model was using to render accurate results. 
 
 **0600 Fix Image, Prediction was 1.71 NM From Actual**
-![](../capstone/images_val/voyage_sims/voyages/30_clouds/L38.4747LON-139.476T2020-03-13-06-00-00.png)
+![](images_val/voyage_sims/voyages/30_clouds/L38.4747LON-139.476T2020-03-13-06-00-00.png)
 
 **0530 Fix Image, Prediction was 26.3 NM from Actual**
-![](../capstone/images_val/voyage_sims/voyages/30_clouds/L38.606LON-139.6066T2020-03-13-05-30-00.png)
+![](images_val/voyage_sims/voyages/30_clouds/L38.606LON-139.6066T2020-03-13-05-30-00.png)
 
 # Conclusions
 
