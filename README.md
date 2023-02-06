@@ -103,7 +103,7 @@ We then simulated various voyages through the training grid at different time in
 | 30 Minutes    | 0.67                        | 0.53                                 |
 | 6 Minutes     | 0.88                        | 0.48                                 |
 
-![](../capstone/md_images/30_min_fixes.png)
+![](md_images/30_min_fixes.png)
 
 *Plot of predicted vs. actual positions as well as the monte carlo predictions and confidence ellipses for each positions*
 
@@ -122,7 +122,7 @@ Our synthetic star image plotting functionality includes the capability to creat
 
 We evaluated the model's accuracy under 4/8 (partly cloudy) conditions and found that at the 30 minute fix frequency, 5 of the 9 images had haversine loss values less than 3 nautical miles, which was encouraging. However, the largest loss was 26 nautical miles. Upon examining the images of the clouds it was not abundantly clear what celestial patterns the model was using to render accurate results. 
 
-![](md_images/30_min_clpuds.png)
+![](md_images/30_min_clouds.png)
 
 **0600 Fix Image, Prediction was 1.71 NM From Actual**
 
