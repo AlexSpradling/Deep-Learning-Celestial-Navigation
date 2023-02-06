@@ -408,6 +408,8 @@ def show_training_grid(start, end, points_along_track=100, displacements=10, dis
     return 
 
 def plot_lat_long(y_pred, y_true, df, show_track = False):
+  
+    mpl.rcParams['savefig.pad_inches'] = 0.2
     """
     Plots the predicted and actual positions.
 
@@ -422,7 +424,7 @@ def plot_lat_long(y_pred, y_true, df, show_track = False):
     sns.set_style("darkgrid")
 
     # create figure and axes
-    fig, ax = plt.subplots(figsize=(10,10))
+    fig, ax = plt.subplots(figsize=(8,8))
 
     if show_track !=False:
         # get start and end coordinates
