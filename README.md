@@ -134,13 +134,13 @@ We evaluated the model's accuracy under 4/8 (partly cloudy) conditions and found
 
 # Conclusions
 
-What worked well:
+**What worked well:**
 
 1. The dense spatio temporal grid architecture and was successful. The neural network was able to reliably predict a position within 1 nm of its actual position provided that position was within the model's training grid parameters, i.e. the time was some multiple of 6 minutes and the position was within the 150 mile by 20 mile training grid.
 
 2. The final model topology was successful. In particular, the Monte Carlo Dropout layers proved to be an effective way to increase the model's accuracy. An additional benefit of this method is that the position can now be interpreted as a probability distribution. The model predicts each position 100 times and plots the mean as the final predicted position, and from the predictions we are able to perform Eigendecomposition and plot a confidence ellipse to better understand the model's uncertainty.  
 
-What did not work:
+**What did not work:**
 
 1. The model is memorizing what the sky looks like in the future, not learning a sequence of images of the sky. As a result, temporal interpolation is poor and an image taken at a time outside of the model's regular training interval results in an erroneous position.
 While our study tried to implement a hybrid CNN-LSTM model to train on a sequence of the sky, the results were poor and we will leave this as an area of further exploration. Our CNN-LSTM model script is provided in the repository as a starting point for future projects.
