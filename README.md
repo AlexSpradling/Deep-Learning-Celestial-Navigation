@@ -32,11 +32,11 @@ We began by constructing a training grid for our model. The training grid must c
 
 To create the spatio-temporal training grid, we plotted a toy voyage off the coast of San Francisco, from 39°N, 140°W to 37°N, 138°W, a distance of 150 nautical miles. We computed a trackline from the origin to the destination, and created a buffer area of 10 nautical miles to the North and South by layering parallel tracklines separated by 1 nautical mile. Each trackline was divided into 100 positions, resulting in a grid that is 20 nautical miles wide and roughly 150 nautical miles long, with a distance of approximately 1 nautical mile between positions, yielding a total of 1919 unique positions.
 
-![](../capstone/md_images/grid.png)
+![](md_images/grid.png)
 
 *Positions in the Training Grid*
 
-![](../capstone/md_images/time_stack.png)
+![](md_images/time_stack.png)
 
 *Positions Layered in Time*
 
