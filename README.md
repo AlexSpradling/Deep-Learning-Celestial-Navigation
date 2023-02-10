@@ -136,7 +136,7 @@ We evaluated the model's accuracy under 4/8 (partly cloudy) conditions and found
 
 **What worked well:**
 
-1. The dense spatio temporal grid architecture and was successful. The neural network was able to reliably predict a position within 1 nm of its actual position provided that position was within the model's training grid parameters, i.e. the time was some multiple of 6 minutes and the position was within the 150 mile by 20 mile training grid.
+1. The dense spatio temporal grid architecture was successful. The neural network was able to reliably predict a position within 1 nm of its actual position provided that position was within the model's training grid parameters, i.e. the time was some multiple of 6 minutes and the position was within the 150 mile by 20 mile training grid.
 
 2. The final model topology was successful. In particular, the Monte Carlo Dropout layers proved to be an effective way to increase the model's accuracy. An additional benefit of this method is that the position can now be interpreted as a probability distribution. The model predicts each position 100 times and plots the mean as the final predicted position, and from the predictions we are able to perform Eigendecomposition and plot a confidence ellipse to better understand the model's uncertainty.  
 
