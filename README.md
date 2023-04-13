@@ -94,7 +94,7 @@ where $\Delta\lambda = \lambda_2 - \lambda_1$, $R$ is the radius of the sphere, 
 During modeling, the Haversine formula performed well using the  Adaptive Moment Estimation (Adam) optimization algorithm, with training loss converging to 1.6 Nautical Miles on our training data after 72 Epochs of Training.
 
 
-The validation process consisted of simulating multiple voyages through the trainign area using different routes and different position fixing frequencies. The results were encouraging. We found that at the 1 hour, 30 minute, and 6 minute fix interval, on unseen images, the mean positional errors were under 1 nautical mile. These results suggest that the construction of the densely layered spatio-temporal training grid is valid. 
+The validation process consisted of simulating multiple voyages through the training area using different routes and different position fixing frequencies. The results were encouraging. We found that at the 1 hour, 30 minute, and 6 minute fix interval, on unseen images, the mean positional errors were under 1 nautical mile. These results suggest that the construction of the densely layered spatio-temporal training grid is valid. 
 
 
 | Fix Frequency | Mean Positional Error (NM) | Standard Dev. Positional Error (NM) |
